@@ -197,6 +197,7 @@ if uploaded_file is not None:
             'Agua 1 lt',
             'Gatorade 600 ml',
             'Electrolit',
+            'Agua Mineral',
             'Coca-Cola 355 ml',
             'Snickers'
         ]
