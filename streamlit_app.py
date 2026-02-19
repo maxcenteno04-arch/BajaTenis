@@ -225,6 +225,28 @@ if uploaded_file is not None:
         
         st.subheader(" Totales Mapeados")
         st.dataframe(totals_df_mapped, use_container_width=True)
+
+    # --- Reproducir sonido de notificación (MP3 personalizado) ---
+if "sound_played" not in st.session_state:
+    st.session_state.sound_played = False
+
+if not st.session_state.sound_played:
+    # Ruta al archivo de audio (ajústala si lo pusiste en una subcarpeta)
+    audio_path = "notificacion.mp3"  # o "assets/notificacion.mp3"
+    
+    st.markdown(f"""
+        <audio id="notificationSound" src="{audio_path}" preload="auto"></audio>
+        <script>
+        (function() {{
+            var audio = document.getElementById('notificationSound');
+            if (audio) {{
+                audio.play().catch(e => console.log("Autoplay bloqueado:", e));
+            }}
+        }})();
+        </script>
+    """, unsafe_allow_html=True)
+    
+    st.session_state.sound_played = True
         
     except Exception as e:
         st.error(f"Ocurrió un error al procesar el archivo: {e}")
