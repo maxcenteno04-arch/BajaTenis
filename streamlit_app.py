@@ -226,7 +226,5 @@ if uploaded_file is not None:
         st.subheader(" Totales Mapeados")
         st.dataframe(totals_df_mapped, use_container_width=True)
         
-        )
-        
     except Exception as e:
         st.error(f"Ocurrió un error al procesar el archivo: {e}")
