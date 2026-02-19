@@ -17,9 +17,6 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, header=16)
         st.success("Archivo cargado correctamente.")
         
-        with st.expander("Ver columnas del archivo original"):
-            st.write("Columnas:", df.columns.tolist())
-        
         # --- Procesamiento (copiado de tu nuevo código) ---
         s = ['Fecha', 'Total', 'Método de pago', 'Tipo de evento', 'Descripción']
         missing = [col for col in s if col not in df.columns]
@@ -217,16 +214,16 @@ if uploaded_file is not None:
         })
         
         # --- Mostrar resultados en Streamlit ---
-        st.subheader("📋 Productos no Mapeados")
+        st.subheader(" Productos no Mapeados")
         st.dataframe(excel_unmapped_products[['Fecha', 'Producto', 'Tarjeta', 'Efectivo']], use_container_width=True)
         
-        st.subheader("💰 Totales No Mapeados")
+        st.subheader(" Totales No Mapeados")
         st.dataframe(totals_df_unmapped, use_container_width=True)
         
-        st.subheader("📊 Resumen de Ventas (Productos Mapeados)")
+        st.subheader(" Resumen de Ventas (Productos Mapeados)")
         st.dataframe(final_sales_summary_mapped, use_container_width=True)
         
-        st.subheader("💵 Totales Mapeados")
+        st.subheader(" Totales Mapeados")
         st.dataframe(totals_df_mapped, use_container_width=True)
         
         # --- Preparar archivo Excel para descargar (con 4 hojas) ---
