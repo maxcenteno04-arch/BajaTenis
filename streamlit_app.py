@@ -1,19 +1,22 @@
-# Updated version of streamlit_app.py
-
 import streamlit as st
-import audio_playback_library  # Hypothetical library
 
-# Example function wrapping audio playback logic
+# File upload section
+title = "Baja Tenis"
 
-def play_audio():
-    audio_file = 'path/to/audio/file.mp3'
+st.title(title)
+
+uploaded_file = st.file_uploader("Choose a file")
+
+if uploaded_file is not None:
     try:
-        audio_playback_library.play(audio_file)
+        # Read the file and process it
+        data = uploaded_file.read()  # Adjust according to the file type
+
+        # Process your data here
+        st.success("File processed successfully!")
     except Exception as e:
-        st.error(f"An error occurred while playing audio: {e}")  # Moved except block only includes error reporting.
+        st.error(f"Error occurred while processing the file: {e}")
+else:
+    st.warning("Please upload a file to proceed.")
 
-# Other application logic
-
-if __name__ == '__main__':
-    st.title("Baja Tenis App")
-    play_audio()
+# Additional streamlit components
