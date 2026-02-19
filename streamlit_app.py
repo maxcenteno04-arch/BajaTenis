@@ -226,22 +226,6 @@ if uploaded_file is not None:
         st.subheader(" Totales Mapeados")
         st.dataframe(totals_df_mapped, use_container_width=True)
         
-        # --- Preparar archivo Excel para descargar (con 4 hojas) ---
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            excel_unmapped_products[['Fecha', 'Producto', 'Tarjeta', 'Efectivo']].to_excel(writer, sheet_name='Productos no Mapeados', index=False)
-            final_sales_summary_mapped.to_excel(writer, sheet_name='Resumen de Ventas', index=False)
-            totals_df_unmapped.to_excel(writer, sheet_name='Totales No Mapeados', index=False)
-            totals_df_mapped.to_excel(writer, sheet_name='Totales Mapeados', index=False)
-        
-        current_date = datetime.now().strftime('%Y%m%d')
-        output_file_name = f'Cuentas_Diarias_{current_date}.xlsx'
-        
-        st.download_button(
-            label="📥 Descargar archivo procesado (Excel con 4 hojas)",
-            data=output.getvalue(),
-            file_name=output_file_name,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
         
     except Exception as e:
