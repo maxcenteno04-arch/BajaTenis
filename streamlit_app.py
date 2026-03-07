@@ -199,8 +199,9 @@ if uploaded_file is not None:
             'Electrolit',
             'Agua Mineral',
             'Coca-Cola 355 ml',
-            'Snickers'
-            'Happy'
+            'Happy',
+            'Snickers',
+          
         ]
         final_sales_summary_mapped['Producto'] = pd.Categorical(final_sales_summary_mapped['Producto'], categories=custom_product_order, ordered=True)
         final_sales_summary_mapped = final_sales_summary_mapped.sort_values('Producto')
