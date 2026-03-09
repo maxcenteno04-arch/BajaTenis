@@ -150,7 +150,7 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_unmapped]
         })
         
-        # --- Productos mapeados ---
+        # --- Productos mapeados (corregido) ---
         sales_details_mapped = sales_details_df_reprocessed[sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         sales_details_mapped['Total Venta'] = sales_details_mapped['Cantidad'] * sales_details_mapped['Precio Unitario']
         
@@ -158,22 +158,36 @@ if uploaded_file is not None:
             Total_Cantidad=('Cantidad', 'sum'),
             Total_Venta=('Total Venta', 'sum')
         ).reset_index()
+        
+        # Crear tabla pivote
         pivoted_sales_mapped = grouped_sales_mapped.pivot_table(
             index='Producto',
             columns='Método de pago',
             values='Total_Venta'
         ).fillna(0)
         
+        # Asegurar que siempre existan las columnas 'Tarjeta' y 'Efectivo'
+        for col in ['Tarjeta', 'Efectivo']:
+            if col not in pivoted_sales_mapped.columns:
+                pivoted_sales_mapped[col] = 0
+        
+        # Convertir el índice en columna para poder hacer merge
+        pivoted_sales_mapped = pivoted_sales_mapped.reset_index()
+        
+        # Cantidad total por producto
         total_quantity_per_product_mapped = sales_details_mapped.groupby('Producto')['Cantidad'].sum().reset_index()
         total_quantity_per_product_mapped.rename(columns={'Cantidad': 'Total Cantidad Vendida'}, inplace=True)
+        
+        # Merge con la cantidad
         final_sales_summary_mapped = pd.merge(pivoted_sales_mapped, total_quantity_per_product_mapped, on='Producto', how='left')
+        
+        # Renombrar columnas de método de pago para diferenciarlas
         final_sales_summary_mapped.rename(columns={
             'Tarjeta': 'Total Venta (Tarjeta)',
             'Efectivo': 'Total Venta (Efectivo)'
         }, inplace=True)
-        final_sales_summary_mapped = final_sales_summary_mapped.reset_index()
-        if 'index' in final_sales_summary_mapped.columns:
-            final_sales_summary_mapped.drop(columns=['index'], inplace=True)
+        
+        # Renombrar a nombres cortos para mostrar
         final_sales_summary_mapped.rename(columns={
             'Total Cantidad Vendida': 'Cantidad',
             'Total Venta (Tarjeta)': 'Tarjeta',
@@ -201,7 +215,6 @@ if uploaded_file is not None:
             'Coca-Cola 355 ml',
             'Happy',
             'Snickers',
-          
         ]
         final_sales_summary_mapped['Producto'] = pd.Categorical(final_sales_summary_mapped['Producto'], categories=custom_product_order, ordered=True)
         final_sales_summary_mapped = final_sales_summary_mapped.sort_values('Producto')
