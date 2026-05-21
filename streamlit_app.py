@@ -8,26 +8,27 @@ from datetime import datetime
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
 st.title("Procesador de archivos Excel de Zettle V2.5")
 
-# --- NUEVA ESTRATEGIA DE INYECCIÓN DE CSS ---
+# --- CSS GARANTIZADO PARA ST.TABLE ---
 st.markdown(
     """
     <style>
-        /* Forzar fondo negro general de la aplicación */
+        /* Fondo negro de la app */
         .stApp {
             background-color: #000000 !important;
             color: #FFFFFF !important;
         }
-
-        /* Forzar que las tablas de Streamlit apliquen tu color en sus variables internas */
-        div[data-testid="stDataFrame"], [data-testid="stDataFrame"] > div {
-            --data-grid-header-background: #d5d948 !important;
-            --data-grid-header-text-color: #000000 !important;
-        }
-
-        /* Ajuste para asegurar visibilidad en elementos antiguos de tabla si existieran */
-        th {
+        
+        /* Forzar color #d5d948 en las cabeceras de st.table */
+        table thead tr th {
             background-color: #d5d948 !important;
             color: #000000 !important;
+            font-weight: bold !important;
+            text-align: left !important;
+        }
+        
+        /* Mantener los bordes limpios en fondo negro */
+        table, th, td {
+            border: 1px solid #222222 !important;
         }
     </style>
     """,
@@ -272,22 +273,22 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
-        # --- Mostrar resultados en Streamlit ---
+        # --- Mostrar resultados en Streamlit (MODIFICADO DE ST.DATAFRAME A ST.TABLE) ---
         st.subheader("Productos no Mapeados")
-        st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']], use_container_width=True, hide_index=True)
+        st.table(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']])
         
         st.subheader("Totales No Mapeados")
-        st.dataframe(totals_df_unmapped, use_container_width=True, hide_index=True)
+        st.table(totals_df_unmapped)
         
         st.subheader("Productos Mapeados")
-        st.dataframe(final_sales_summary_mapped, use_container_width=True, hide_index=True)
+        st.table(final_sales_summary_mapped)
         
         st.subheader("Totales Mapeados")
-        st.dataframe(totals_df_mapped, use_container_width=True, hide_index=True)
+        st.table(totals_df_mapped)
         
         st.subheader("Otro tipo de eventos")
-        st.dataframe(final_other_events, use_container_width=True, hide_index=True)
-        st.dataframe(totals_df_other, use_container_width=True, hide_index=True)
+        st.table(final_other_events)
+        st.table(totals_df_other)
         
         # --- Reproducir sonido de notificación ---
         if "sound_played" not in st.session_state:
@@ -298,4 +299,5 @@ if uploaded_file is not None:
             st.session_state.sound_played = True
         
     except Exception as e:
+        st.error(f"Ocurrió un error al procesar el archivo: {e}")
         st.error(f"Ocurrió un error al procesar el archivo: {e}")
