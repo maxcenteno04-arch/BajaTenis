@@ -207,6 +207,7 @@ if uploaded_file is not None:
             'Renta de Cancha',
             'Renta pala',
             'Pelotas NOX Pro Titanium',
+            'Pelotas PENN Championship',
             'Overgrip NOX',
             'Agua 1 lt',
             'Gatorade 600 ml',
