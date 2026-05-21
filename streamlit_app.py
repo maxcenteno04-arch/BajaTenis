@@ -7,6 +7,29 @@ from datetime import datetime
 
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
 st.title("Procesador de archivos Excel de Zettle V2.5")
+
+# --- INYECTAR CSS PARA CAMBIAR LAS CABECERAS DE LAS TABLAS A #d5d948 ---
+st.markdown(
+    """
+    <style>
+        /* Cambia el fondo de la cabecera de st.dataframe */
+        div[data-testid="stDataFrame"] th, 
+        .stTable thead tr th,
+        th {
+            background-color: #d5d948 !important;
+            color: #000000 !important; /* Texto negro para que contraste con el amarillo */
+            font-weight: bold !important;
+        }
+        
+        /* Asegura que al pasar el mouse por encima de la cabecera mantenga el color */
+        div[data-testid="stDataFrame"] th:hover {
+            background-color: #d5d948 !important;
+            color: #000000 !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx**")
 
 uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "xls"])
