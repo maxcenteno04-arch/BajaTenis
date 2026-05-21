@@ -49,14 +49,14 @@ if uploaded_file is not None:
         products_to_summarize = [
             'Renta de Cancha', 'Renta pala', 'Gatorade 600 ml', 'Electrolit',
             'Agua 1 lt', 'Pelotas NOX Pro Titanium', 'Agua Mineral', 'Snickers',
-            'Coca-Cola 355 ml', 'Overgrip NOX', 'Happy'
+            'Coca-Cola 355 ml', 'Overgrip NOX', 'Happy', 'Pelotas PENN Championship'
         ]
         
         description_to_number_map = {
             'Renta de Cancha': 650, 'Renta pala': 100, 'Gatorade 600 ml': 40,
             'Electrolit': 45, 'Agua 1 lt': 30, 'Pelotas NOX Pro Titanium': 250,
             'Agua Mineral': 30, 'Snickers': 30, 'Coca-Cola 355 ml': 40,
-            'Overgrip NOX': 100, 'Happy': 60 
+            'Overgrip NOX': 100, 'Happy': 60 , 'Pelotas PENN Championship':200
         }
         
         def extract_item_details(desc_value, desc_map, products_list):
