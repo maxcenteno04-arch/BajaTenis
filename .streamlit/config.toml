@@ -1,15 +1,6 @@
 [theme]
-# Color de fondo principal de la app (Negro absoluto)
+base = "dark"
 backgroundColor = "#000000"
-
-# Color de fondo de las tarjetas y el cargador de archivos
 secondaryBackgroundColor = "#111111"
-
-# Color de las cabeceras de las tablas, líneas de énfasis y botones
-primaryColor = "#d5d948"
-
-# Color de los textos dentro de las tablas y títulos (Blanco para alto contraste)
 textColor = "#FFFFFF"
-
-# Tipo de fuente
 font = "sans serif"
