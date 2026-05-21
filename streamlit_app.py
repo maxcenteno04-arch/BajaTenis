@@ -140,8 +140,6 @@ if uploaded_file is not None:
         excel_unmapped_products['Total Venta'] = excel_unmapped_products['Total Venta'].apply(lambda x: '' if pd.isna(x) else '{:.2f}'.format(x))
         if 'Original Description' in excel_unmapped_products.columns:
             excel_unmapped_products.drop(columns=['Original Description'], inplace=True)
-        if 'Fecha' in excel_unmapped_products.columns:
-            excel_unmapped_products['Fecha'] = excel_unmapped_products['Fecha'].dt.strftime('%Y-%m-%d')
         
         excel_unmapped_products['Tarjeta'] = excel_unmapped_products.apply(
             lambda row: row['Precio Unitario'] if row['Método de pago'] == 'Tarjeta' else '', axis=1
@@ -199,13 +197,8 @@ if uploaded_file is not None:
                 'Total Venta (Efectivo)': 'Efectivo'
             }, inplace=True)
             
-            product_min_date = sales_details_mapped.groupby('Producto')['Fecha'].min().reset_index()
-            product_min_date.rename(columns={'Fecha': 'Fecha_Inicio'}, inplace=True)
-            final_sales_summary_mapped = pd.merge(final_sales_summary_mapped, product_min_date, on='Producto', how='left')
-            if 'Fecha_Inicio' in final_sales_summary_mapped.columns:
-                final_sales_summary_mapped['Fecha_Inicio'] = final_sales_summary_mapped['Fecha_Inicio'].dt.strftime('%Y-%m-%d')
-            
-            final_sales_summary_mapped = final_sales_summary_mapped[['Fecha_Inicio', 'Producto', 'Cantidad', 'Tarjeta', 'Efectivo']]
+            # MODIFICACIÓN: Ya no incluimos 'Fecha_Inicio' en el DataFrame final expuesto
+            final_sales_summary_mapped = final_sales_summary_mapped[['Producto', 'Cantidad', 'Tarjeta', 'Efectivo']]
             custom_product_order = [
                 'Renta de Cancha', 'Renta pala', 'Pelotas NOX Pro Titanium',
                 'Pelotas PENN Championship', 'Overgrip NOX', 'Agua 1 lt',
@@ -215,7 +208,7 @@ if uploaded_file is not None:
             final_sales_summary_mapped['Producto'] = pd.Categorical(final_sales_summary_mapped['Producto'], categories=custom_product_order, ordered=True)
             final_sales_summary_mapped = final_sales_summary_mapped.sort_values('Producto')
         else:
-            final_sales_summary_mapped = pd.DataFrame(columns=['Fecha_Inicio', 'Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
+            final_sales_summary_mapped = pd.DataFrame(columns=['Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
         
         # Totales mapeados
         total_products_mapped = final_sales_summary_mapped.shape[0]
@@ -227,18 +220,15 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_mapped]
         })
         
-        # MODIFICACIÓN: --- Procesamiento Ajustado para "Otro tipo de eventos" ---
+        # --- Procesamiento para "Otro tipo de eventos" ---
         df_other_events = pd.DataFrame(other_events_details)
         if not df_other_events.empty:
-            # Convertir precios a números
             df_other_events['Precio Unitario'] = pd.to_numeric(df_other_events['Precio Unitario'], errors='coerce').fillna(0.0)
             df_other_events['Total Venta'] = df_other_events['Cantidad'] * df_other_events['Precio Unitario']
             
-            # Formatear la fecha
             if 'Fecha' in df_other_events.columns:
                 df_other_events['Fecha'] = df_other_events['Fecha'].dt.strftime('%Y-%m-%d')
                 
-            # Distribución en columnas Tarjeta y Efectivo por cada registro
             df_other_events['Tarjeta'] = df_other_events.apply(
                 lambda row: row['Total Venta'] if row['Método de pago'] == 'Tarjeta' else 0.0, axis=1
             )
@@ -246,13 +236,9 @@ if uploaded_file is not None:
                 lambda row: row['Total Venta'] if row['Método de pago'] == 'Efectivo' else 0.0, axis=1
             )
             
-            # Cambiar 'Original Description' por el nombre final 'Descripción'
             df_other_events.rename(columns={'Original Description': 'Descripción', 'Tipo de evento': 'Evento'}, inplace=True)
-            
-            # Seleccionar y ordenar las columnas solicitadas: 'Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'
             final_other_events = df_other_events[['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo']].copy()
             
-            # Totales de "Otro tipo de eventos"
             total_events_other = final_other_events.shape[0]
             total_tarjeta_other = final_other_events['Tarjeta'].sum()
             total_efectivo_other = final_other_events['Efectivo'].sum()
@@ -265,23 +251,23 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
-        # --- Mostrar resultados en Streamlit ---
+        # --- Mostrar resultados en Streamlit (MODIFICACIÓN: hide_index=True en todas las tablas) ---
         st.subheader("Productos no Mapeados")
-        st.dataframe(excel_unmapped_products[['Fecha', 'Producto', 'Tarjeta', 'Efectivo']], use_container_width=True)
+        # MODIFICACIÓN: Se removió 'Fecha' de la visualización de Productos no Mapeados
+        st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']], use_container_width=True, hide_index=True)
         
         st.subheader("Totales No Mapeados")
-        st.dataframe(totals_df_unmapped, use_container_width=True)
+        st.dataframe(totals_df_unmapped, use_container_width=True, hide_index=True)
         
         st.subheader("Resumen de Ventas (Productos Mapeados)")
-        st.dataframe(final_sales_summary_mapped, use_container_width=True)
+        st.dataframe(final_sales_summary_mapped, use_container_width=True, hide_index=True)
         
         st.subheader("Totales Mapeados")
-        st.dataframe(totals_df_mapped, use_container_width=True)
+        st.dataframe(totals_df_mapped, use_container_width=True, hide_index=True)
         
-        # MODIFICACIÓN: Tabla visual con la columna 'Descripción' en vez de 'Cantidad'
         st.subheader("Otro tipo de eventos")
-        st.dataframe(final_other_events, use_container_width=True)
-        st.dataframe(totals_df_other, use_container_width=True)
+        st.dataframe(final_other_events, use_container_width=True, hide_index=True)
+        st.dataframe(totals_df_other, use_container_width=True, hide_index=True)
         
         # --- Reproducir sonido de notificación ---
         if "sound_played" not in st.session_state:
