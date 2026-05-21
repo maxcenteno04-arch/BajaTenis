@@ -8,28 +8,26 @@ from datetime import datetime
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
 st.title("Procesador de archivos Excel de Zettle V2.5")
 
-# --- INYECTAR CSS PARA CAMBIAR LAS CABECERAS DE LAS TABLAS A #d5d948 ---
+# --- INDICACIÓN REAL PARA EL COLOR DEL FONDO NEGRO Y LAS CABECERAS #d5d948 ---
 st.markdown(
     """
     <style>
-        /* Cambia el fondo de la cabecera de st.dataframe */
-        div[data-testid="stDataFrame"] th, 
-        .stTable thead tr th,
-        th {
-            background-color: #d5d948 !important;
-            color: #000000 !important; /* Texto negro para que contraste con el amarillo */
-            font-weight: bold !important;
+        /* 1. Forzar el fondo de la aplicación a negro absoluto y textos a blanco */
+        .stApp {
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
         }
-        
-        /* Asegura que al pasar el mouse por encima de la cabecera mantenga el color */
-        div[data-testid="stDataFrame"] th:hover {
-            background-color: #d5d948 !important;
-            color: #000000 !important;
+
+        /* 2. Modifica el contenedor de las tablas st.dataframe actuales */
+        [data-testid="stDataFrame"] {
+            --data-grid-header-background: #d5d948 !important; /* Fondo de la cabecera */
+            --data-grid-header-text-color: #000000 !important; /* Texto de la cabecera en negro */
         }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx**")
 
 uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "xls"])
@@ -173,7 +171,6 @@ if uploaded_file is not None:
         excel_unmapped_products['Tarjeta'] = pd.to_numeric(excel_unmapped_products['Tarjeta'], errors='coerce').fillna(0.0)
         excel_unmapped_products['Efectivo'] = pd.to_numeric(excel_unmapped_products['Efectivo'], errors='coerce').fillna(0.0)
         
-        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
         total_tarjeta_unmapped = excel_unmapped_products['Tarjeta'].sum()
         total_efectivo_unmapped = excel_unmapped_products['Efectivo'].sum()
         totals_df_unmapped = pd.DataFrame({
@@ -231,7 +228,6 @@ if uploaded_file is not None:
         else:
             final_sales_summary_mapped = pd.DataFrame(columns=['Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
         
-        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
         total_tarjeta_mapped = pd.to_numeric(final_sales_summary_mapped['Tarjeta']).sum() if not final_sales_summary_mapped.empty else 0.0
         total_efectivo_mapped = pd.to_numeric(final_sales_summary_mapped['Efectivo']).sum() if not final_sales_summary_mapped.empty else 0.0
         totals_df_mapped = pd.DataFrame({
