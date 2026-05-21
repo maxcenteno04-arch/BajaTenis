@@ -7,7 +7,7 @@ from datetime import datetime
 
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
 st.title("Procesador de archivos Excel de Zettle V2.5")
-st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx** para obtener el resumen de ventas y productos no mapeados, con totales.")
+st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx**")
 
 uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "xls"])
 
@@ -259,7 +259,7 @@ if uploaded_file is not None:
         st.subheader("Totales No Mapeados")
         st.dataframe(totals_df_unmapped, use_container_width=True, hide_index=True)
         
-        st.subheader("Resumen de Ventas (Productos Mapeados)")
+        st.subheader("Productos Mapeados")
         st.dataframe(final_sales_summary_mapped, use_container_width=True, hide_index=True)
         
         st.subheader("Totales Mapeados")
