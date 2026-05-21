@@ -17,8 +17,7 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file, header=16)
         st.success("Archivo cargado correctamente.")
         
-        # --- Procesamiento (copiado de tu nuevo código) ---
-        # MODIFICACIÓN: Nos aseguramos de incluir 'Tipo de evento' en la validación
+        # --- Procesamiento ---
         s = ['Fecha', 'Total', 'Método de pago', 'Tipo de evento', 'Descripción']
         missing = [col for col in s if col not in df.columns]
         if missing:
@@ -82,14 +81,13 @@ if uploaded_file is not None:
             return None, None, None
         
         reprocessed_sales_details = []
-        # MODIFICACIÓN: Lista para almacenar las filas que NO sean tipo 'Pago'
         other_events_details = []
 
         for index, row in excel.iterrows():
             transaction_total = row['Total']
             payment_method = row['Método de pago']
             transaction_date = row['Fecha']
-            event_type = row['Tipo de evento'] # MODIFICACIÓN: Extraer el tipo de evento
+            event_type = row['Tipo de evento']
             
             current_transaction_items_raw = []
             for col in description_cols:
@@ -103,15 +101,13 @@ if uploaded_file is not None:
                         'Precio Unitario': unit_price,
                         'Método de pago': payment_method,
                         'Fecha': transaction_date,
-                        'Tipo de evento': event_type # MODIFICACIÓN: Pasar el tipo de evento al diccionario
+                        'Tipo de evento': event_type
                     })
             
-            # MODIFICACIÓN: Si el evento NO es 'Pago', lo desviamos a la otra lista y saltamos al siguiente registro
             if str(event_type).strip().lower() != 'pago':
                 other_events_details.extend(current_transaction_items_raw)
-                continue # Saltamos el proceso de cálculo de totales para pagos normales
+                continue
 
-            # El resto del procesamiento sigue igual (solo para Tipo de evento == 'Pago')
             mapped_items = [item for item in current_transaction_items_raw if item['Precio Unitario'] is not None]
             unmapped_items = [item for item in current_transaction_items_raw if item['Precio Unitario'] is None]
             total_mapped_sales_value = sum(item['Cantidad'] * item['Precio Unitario'] for item in mapped_items)
@@ -136,7 +132,6 @@ if uploaded_file is not None:
         if not sales_details_df_reprocessed.empty:
             sales_details_df_reprocessed['Total Venta'] = sales_details_df_reprocessed['Cantidad'] * sales_details_df_reprocessed['Precio Unitario']
         else:
-            # Prevenir errores si no hay ningún pago normal
             sales_details_df_reprocessed = pd.DataFrame(columns=['Cantidad', 'Precio Unitario', 'Total Venta', 'Producto', 'Método de pago', 'Fecha'])
         
         # --- Productos no mapeados ---
@@ -148,7 +143,6 @@ if uploaded_file is not None:
         if 'Fecha' in excel_unmapped_products.columns:
             excel_unmapped_products['Fecha'] = excel_unmapped_products['Fecha'].dt.strftime('%Y-%m-%d')
         
-        # Crear columnas Tarjeta y Efectivo
         excel_unmapped_products['Tarjeta'] = excel_unmapped_products.apply(
             lambda row: row['Precio Unitario'] if row['Método de pago'] == 'Tarjeta' else '', axis=1
         )
@@ -158,7 +152,6 @@ if uploaded_file is not None:
         excel_unmapped_products['Tarjeta'] = pd.to_numeric(excel_unmapped_products['Tarjeta'], errors='coerce').fillna(0.0)
         excel_unmapped_products['Efectivo'] = pd.to_numeric(excel_unmapped_products['Efectivo'], errors='coerce').fillna(0.0)
         
-        # Totales no mapeados
         total_products_unmapped = excel_unmapped_products.shape[0]
         total_tarjeta_unmapped = excel_unmapped_products['Tarjeta'].sum()
         total_efectivo_unmapped = excel_unmapped_products['Efectivo'].sum()
@@ -168,7 +161,7 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_unmapped]
         })
         
-        # --- Productos mapeados (corregido) ---
+        # --- Productos mapeados ---
         sales_details_mapped = sales_details_df_reprocessed[sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         if not sales_details_mapped.empty:
             sales_details_mapped['Total Venta'] = sales_details_mapped['Cantidad'] * sales_details_mapped['Precio Unitario']
@@ -178,49 +171,40 @@ if uploaded_file is not None:
                 Total_Venta=('Total Venta', 'sum')
             ).reset_index()
             
-            # Crear tabla pivote
             pivoted_sales_mapped = grouped_sales_mapped.pivot_table(
                 index='Producto',
                 columns='Método de pago',
                 values='Total_Venta'
             ).fillna(0)
             
-            # Asegurar que siempre existan las columnas 'Tarjeta' y 'Efectivo'
             for col in ['Tarjeta', 'Efectivo']:
                 if col not in pivoted_sales_mapped.columns:
                     pivoted_sales_mapped[col] = 0
             
-            # Convertir el índice en columna para poder hacer merge
             pivoted_sales_mapped = pivoted_sales_mapped.reset_index()
             
-            # Cantidad total por producto
             total_quantity_per_product_mapped = sales_details_mapped.groupby('Producto')['Cantidad'].sum().reset_index()
             total_quantity_per_product_mapped.rename(columns={'Cantidad': 'Total Cantidad Vendida'}, inplace=True)
             
-            # Merge con la cantidad
             final_sales_summary_mapped = pd.merge(pivoted_sales_mapped, total_quantity_per_product_mapped, on='Producto', how='left')
             
-            # Renombrar columnas de método de pago para diferenciarlas
             final_sales_summary_mapped.rename(columns={
                 'Tarjeta': 'Total Venta (Tarjeta)',
                 'Efectivo': 'Total Venta (Efectivo)'
             }, inplace=True)
             
-            # Renombrar a nombres cortos para mostrar
             final_sales_summary_mapped.rename(columns={
                 'Total Cantidad Vendida': 'Cantidad',
                 'Total Venta (Tarjeta)': 'Tarjeta',
                 'Total Venta (Efectivo)': 'Efectivo'
             }, inplace=True)
             
-            # Fecha de inicio
             product_min_date = sales_details_mapped.groupby('Producto')['Fecha'].min().reset_index()
             product_min_date.rename(columns={'Fecha': 'Fecha_Inicio'}, inplace=True)
             final_sales_summary_mapped = pd.merge(final_sales_summary_mapped, product_min_date, on='Producto', how='left')
             if 'Fecha_Inicio' in final_sales_summary_mapped.columns:
                 final_sales_summary_mapped['Fecha_Inicio'] = final_sales_summary_mapped['Fecha_Inicio'].dt.strftime('%Y-%m-%d')
             
-            # Reordenar columnas y ordenar productos
             final_sales_summary_mapped = final_sales_summary_mapped[['Fecha_Inicio', 'Producto', 'Cantidad', 'Tarjeta', 'Efectivo']]
             custom_product_order = [
                 'Renta de Cancha', 'Renta pala', 'Pelotas NOX Pro Titanium',
@@ -243,18 +227,18 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_mapped]
         })
         
-        # MODIFICACIÓN: --- Procesamiento de la nueva columna/tabla "Otro tipo de eventos" ---
+        # MODIFICACIÓN: --- Procesamiento Ajustado para "Otro tipo de eventos" ---
         df_other_events = pd.DataFrame(other_events_details)
         if not df_other_events.empty:
-            # Calcular el total por registro
+            # Convertir precios a números
             df_other_events['Precio Unitario'] = pd.to_numeric(df_other_events['Precio Unitario'], errors='coerce').fillna(0.0)
             df_other_events['Total Venta'] = df_other_events['Cantidad'] * df_other_events['Precio Unitario']
             
-            # Formatear fecha
+            # Formatear la fecha
             if 'Fecha' in df_other_events.columns:
                 df_other_events['Fecha'] = df_other_events['Fecha'].dt.strftime('%Y-%m-%d')
                 
-            # Separar en columnas Tarjeta y Efectivo basándonos en el método de pago
+            # Distribución en columnas Tarjeta y Efectivo por cada registro
             df_other_events['Tarjeta'] = df_other_events.apply(
                 lambda row: row['Total Venta'] if row['Método de pago'] == 'Tarjeta' else 0.0, axis=1
             )
@@ -262,20 +246,11 @@ if uploaded_file is not None:
                 lambda row: row['Total Venta'] if row['Método de pago'] == 'Efectivo' else 0.0, axis=1
             )
             
-            # Agrupar por Tipo de evento para mostrar el resumen condensado con las mismas características
-            final_other_events = df_other_events.groupby('Tipo de evento').agg(
-                Cantidad=('Cantidad', 'sum'),
-                Tarjeta=('Tarjeta', 'sum'),
-                Efectivo=('Efectivo', 'sum')
-            ).reset_index()
+            # Cambiar 'Original Description' por el nombre final 'Descripción'
+            df_other_events.rename(columns={'Original Description': 'Descripción', 'Tipo de evento': 'Evento'}, inplace=True)
             
-            # Añadir columna de fecha (Mínima encontrada para ese evento)
-            min_date_other = df_other_events.groupby('Tipo de evento')['Fecha'].min().reset_index()
-            final_other_events = pd.merge(min_date_other, final_other_events, on='Tipo de evento', how='left')
-            
-            # Reordenar y renombrar la columna principal para mantener consistencia visual
-            final_other_events.rename(columns={'Tipo de evento': 'Evento'}, inplace=True)
-            final_other_events = final_other_events[['Fecha', 'Evento', 'Cantidad', 'Tarjeta', 'Efectivo']]
+            # Seleccionar y ordenar las columnas solicitadas: 'Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'
+            final_other_events = df_other_events[['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo']].copy()
             
             # Totales de "Otro tipo de eventos"
             total_events_other = final_other_events.shape[0]
@@ -287,8 +262,7 @@ if uploaded_file is not None:
                 'Total Efectivo': [total_efectivo_other]
             })
         else:
-            # Dataframes vacíos por si el excel subido solo tiene registros tipo 'Pago'
-            final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Cantidad', 'Tarjeta', 'Efectivo'])
+            final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
         # --- Mostrar resultados en Streamlit ---
@@ -304,12 +278,12 @@ if uploaded_file is not None:
         st.subheader("Totales Mapeados")
         st.dataframe(totals_df_mapped, use_container_width=True)
         
-        # MODIFICACIÓN: Se añade la sección "Otro tipo de eventos" abajo de Totales Mapeados
+        # MODIFICACIÓN: Tabla visual con la columna 'Descripción' en vez de 'Cantidad'
         st.subheader("Otro tipo de eventos")
         st.dataframe(final_other_events, use_container_width=True)
         st.dataframe(totals_df_other, use_container_width=True)
         
-        # --- Reproducir sonido de notificación (una vez por archivo) ---
+        # --- Reproducir sonido de notificación ---
         if "sound_played" not in st.session_state:
             st.session_state.sound_played = False
 
