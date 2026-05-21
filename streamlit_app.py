@@ -8,20 +8,26 @@ from datetime import datetime
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
 st.title("Procesador de archivos Excel de Zettle V2.5")
 
-# --- INDICACIÓN REAL PARA EL COLOR DEL FONDO NEGRO Y LAS CABECERAS #d5d948 ---
+# --- NUEVA ESTRATEGIA DE INYECCIÓN DE CSS ---
 st.markdown(
     """
     <style>
-        /* 1. Forzar el fondo de la aplicación a negro absoluto y textos a blanco */
+        /* Forzar fondo negro general de la aplicación */
         .stApp {
             background-color: #000000 !important;
             color: #FFFFFF !important;
         }
 
-        /* 2. Modifica el contenedor de las tablas st.dataframe actuales */
-        [data-testid="stDataFrame"] {
-            --data-grid-header-background: #d5d948 !important; /* Fondo de la cabecera */
-            --data-grid-header-text-color: #000000 !important; /* Texto de la cabecera en negro */
+        /* Forzar que las tablas de Streamlit apliquen tu color en sus variables internas */
+        div[data-testid="stDataFrame"], [data-testid="stDataFrame"] > div {
+            --data-grid-header-background: #d5d948 !important;
+            --data-grid-header-text-color: #000000 !important;
+        }
+
+        /* Ajuste para asegurar visibilidad en elementos antiguos de tabla si existieran */
+        th {
+            background-color: #d5d948 !important;
+            color: #000000 !important;
         }
     </style>
     """,
