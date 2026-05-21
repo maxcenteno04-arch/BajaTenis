@@ -1,0 +1,17 @@
+[theme]
+# Forzamos la base oscura de Streamlit
+base = "dark"
+
+# Color de fondo principal (Negro absoluto)
+backgroundColor = "#000000"
+
+# Color de fondo secundario (Para el área de subida de archivos y widgets)
+secondaryBackgroundColor = "#121212"
+
+# Color de acento (Botones, líneas activas y las cabeceras de tus tablas de datos)
+primaryColor = "#d5d948"
+
+# Color del texto (Blanco puro para que contraste perfectamente con el negro)
+textColor = "#FFFFFF"
+
+font = "sans serif"
