@@ -150,11 +150,10 @@ if uploaded_file is not None:
         excel_unmapped_products['Tarjeta'] = pd.to_numeric(excel_unmapped_products['Tarjeta'], errors='coerce').fillna(0.0)
         excel_unmapped_products['Efectivo'] = pd.to_numeric(excel_unmapped_products['Efectivo'], errors='coerce').fillna(0.0)
         
-        total_products_unmapped = excel_unmapped_products.shape[0]
+        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
         total_tarjeta_unmapped = excel_unmapped_products['Tarjeta'].sum()
         total_efectivo_unmapped = excel_unmapped_products['Efectivo'].sum()
         totals_df_unmapped = pd.DataFrame({
-            'Total Productos': [total_products_unmapped],
             'Total Tarjeta': [total_tarjeta_unmapped],
             'Total Efectivo': [total_efectivo_unmapped]
         })
@@ -197,7 +196,6 @@ if uploaded_file is not None:
                 'Total Venta (Efectivo)': 'Efectivo'
             }, inplace=True)
             
-            # MODIFICACIÓN: Ya no incluimos 'Fecha_Inicio' en el DataFrame final expuesto
             final_sales_summary_mapped = final_sales_summary_mapped[['Producto', 'Cantidad', 'Tarjeta', 'Efectivo']]
             custom_product_order = [
                 'Renta de Cancha', 'Renta pala', 'Pelotas NOX Pro Titanium',
@@ -210,12 +208,10 @@ if uploaded_file is not None:
         else:
             final_sales_summary_mapped = pd.DataFrame(columns=['Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
         
-        # Totales mapeados
-        total_products_mapped = final_sales_summary_mapped.shape[0]
+        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
         total_tarjeta_mapped = pd.to_numeric(final_sales_summary_mapped['Tarjeta']).sum() if not final_sales_summary_mapped.empty else 0.0
         total_efectivo_mapped = pd.to_numeric(final_sales_summary_mapped['Efectivo']).sum() if not final_sales_summary_mapped.empty else 0.0
         totals_df_mapped = pd.DataFrame({
-            'Total Productos': [total_products_mapped],
             'Total Tarjeta': [total_tarjeta_mapped],
             'Total Efectivo': [total_efectivo_mapped]
         })
@@ -251,9 +247,8 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
-        # --- Mostrar resultados en Streamlit (MODIFICACIÓN: hide_index=True en todas las tablas) ---
+        # --- Mostrar resultados en Streamlit ---
         st.subheader("Productos no Mapeados")
-        # MODIFICACIÓN: Se removió 'Fecha' de la visualización de Productos no Mapeados
         st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']], use_container_width=True, hide_index=True)
         
         st.subheader("Totales No Mapeados")
