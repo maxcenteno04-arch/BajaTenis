@@ -13,11 +13,10 @@ uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "x
 
 if uploaded_file is not None:
     try:
-        # Leer el archivo con header=16
+
         df = pd.read_excel(uploaded_file, header=16)
         st.success("Archivo cargado correctamente.")
         
-        # --- Procesamiento ---
         s = ['Fecha', 'Total', 'Método de pago', 'Tipo de evento', 'Descripción']
         missing = [col for col in s if col not in df.columns]
         if missing:
@@ -33,7 +32,6 @@ if uploaded_file is not None:
         excel = pd.concat([excel, split_description], axis=1)
         excel = excel.drop(columns=['Descripción'])
         
-        # Reemplazar métodos de pago
         excel['Método de pago'] = excel['Método de pago'].replace(['Sin contacto', 'Chip'], 'Tarjeta')
         
         description_cols = [col for col in excel.columns if col.startswith('Descripción_')]
@@ -134,7 +132,7 @@ if uploaded_file is not None:
         else:
             sales_details_df_reprocessed = pd.DataFrame(columns=['Cantidad', 'Precio Unitario', 'Total Venta', 'Producto', 'Método de pago', 'Fecha'])
         
-        # --- Productos no mapeados ---
+
         excel_unmapped_products = sales_details_df_reprocessed[~sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         excel_unmapped_products['Cantidad'] = excel_unmapped_products['Cantidad'].apply(lambda x: '' if pd.isna(x) else x)
         excel_unmapped_products['Total Venta'] = excel_unmapped_products['Total Venta'].apply(lambda x: '' if pd.isna(x) else '{:.2f}'.format(x))
@@ -158,7 +156,6 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_unmapped]
         })
         
-        # --- Productos mapeados ---
         sales_details_mapped = sales_details_df_reprocessed[sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         if not sales_details_mapped.empty:
             sales_details_mapped['Total Venta'] = sales_details_mapped['Cantidad'] * sales_details_mapped['Precio Unitario']
@@ -208,7 +205,6 @@ if uploaded_file is not None:
         else:
             final_sales_summary_mapped = pd.DataFrame(columns=['Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
         
-        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
         total_tarjeta_mapped = pd.to_numeric(final_sales_summary_mapped['Tarjeta']).sum() if not final_sales_summary_mapped.empty else 0.0
         total_efectivo_mapped = pd.to_numeric(final_sales_summary_mapped['Efectivo']).sum() if not final_sales_summary_mapped.empty else 0.0
         totals_df_mapped = pd.DataFrame({
@@ -216,7 +212,6 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_mapped]
         })
         
-        # --- Procesamiento para "Otro tipo de eventos" ---
         df_other_events = pd.DataFrame(other_events_details)
         if not df_other_events.empty:
             df_other_events['Precio Unitario'] = pd.to_numeric(df_other_events['Precio Unitario'], errors='coerce').fillna(0.0)
@@ -247,7 +242,6 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
-        # --- Mostrar resultados en Streamlit ---
         st.subheader("Productos no Mapeados")
         st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']], use_container_width=True, hide_index=True)
         
@@ -264,7 +258,6 @@ if uploaded_file is not None:
         st.dataframe(final_other_events, use_container_width=True, hide_index=True)
         st.dataframe(totals_df_other, use_container_width=True, hide_index=True)
 
-        # --- Nueva sección: Total de Ventas (Formato Transpuesto) ---
         st.subheader("Total de Ventas")
         
         sales_summary_data = {
@@ -289,7 +282,6 @@ if uploaded_file is not None:
         total_sales_df = pd.DataFrame(sales_summary_data)
         st.dataframe(total_sales_df, use_container_width=True, hide_index=True)
         
-        # --- Reproducir sonido de notificación ---
         if "sound_played" not in st.session_state:
             st.session_state.sound_played = False
 
