@@ -264,18 +264,26 @@ if uploaded_file is not None:
         st.dataframe(final_other_events, use_container_width=True, hide_index=True)
         st.dataframe(totals_df_other, use_container_width=True, hide_index=True)
 
-        # --- Nueva sección: Total de Ventas ---
+        # --- Nueva sección: Total de Ventas (Formato Transpuesto) ---
         st.subheader("Total de Ventas")
         
-        # Construcción del dataframe consolidado con sumas cruzadas
-        total_general_tarjeta = total_tarjeta_mapped + total_tarjeta_unmapped
-        total_general_efectivo = total_efectivo_mapped + total_efectivo_unmapped
-        
         sales_summary_data = {
-            'Concepto': ['Total Tarjeta', 'Total Efectivo', 'Gran Total'],
-            'Total Mapeados': [total_tarjeta_mapped, total_efectivo_mapped, total_tarjeta_mapped + total_efectivo_mapped],
-            'Total No Mapeados': [total_tarjeta_unmapped, total_efectivo_unmapped, total_tarjeta_unmapped + total_efectivo_unmapped],
-            'Total General': [total_general_tarjeta, total_general_efectivo, total_general_tarjeta + total_general_efectivo]
+            'Concepto': ['Total Mapeados', 'Total No Mapeados', 'Gran Total'],
+            'Tarjeta': [
+                total_tarjeta_mapped, 
+                total_tarjeta_unmapped, 
+                total_tarjeta_mapped + total_tarjeta_unmapped
+            ],
+            'Efectivo': [
+                total_efectivo_mapped, 
+                total_efectivo_unmapped, 
+                total_efectivo_mapped + total_efectivo_unmapped
+            ],
+            'Total General': [
+                total_tarjeta_mapped + total_efectivo_mapped,
+                total_tarjeta_unmapped + total_efectivo_unmapped,
+                (total_tarjeta_mapped + total_tarjeta_unmapped) + (total_efectivo_mapped + total_efectivo_unmapped)
+            ]
         }
         
         total_sales_df = pd.DataFrame(sales_summary_data)
