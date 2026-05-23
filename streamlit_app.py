@@ -6,7 +6,7 @@ from io import BytesIO
 from datetime import datetime
 
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
-st.title("Procesador de archivos Excel de Zettle V2.5")
+st.title("Procesador de archivos Excel de Zettle V2.6")
 st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx**")
 
 uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "xls"])
@@ -268,7 +268,7 @@ if uploaded_file is not None:
         st.subheader("Total de Ventas")
         
         sales_summary_data = {
-            'Concepto': ['Total Mapeados', 'Total No Mapeados', 'Gran Total'],
+            'Concepto': ['Total Mapeados', 'Total No Mapeados', 'Total General'],
             'Tarjeta': [
                 total_tarjeta_mapped, 
                 total_tarjeta_unmapped, 
@@ -279,7 +279,7 @@ if uploaded_file is not None:
                 total_efectivo_unmapped, 
                 total_efectivo_mapped + total_efectivo_unmapped
             ],
-            'Total General': [
+            'Total': [
                 total_tarjeta_mapped + total_efectivo_mapped,
                 total_tarjeta_unmapped + total_efectivo_unmapped,
                 (total_tarjeta_mapped + total_tarjeta_unmapped) + (total_efectivo_mapped + total_efectivo_unmapped)
