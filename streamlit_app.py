@@ -6,7 +6,7 @@ from io import BytesIO
 from datetime import datetime
 
 st.set_page_config(page_title="Procesador de Reportes Zettle (con totales)", layout="wide")
-st.title("Procesador de archivos Excel de Zettle V2.6")
+st.title("Procesador de archivos Excel de Zettle V2.8")
 st.markdown("Sube el archivo **Zettle-Receipts-Report-... .xlsx**")
 
 uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "xls"])
