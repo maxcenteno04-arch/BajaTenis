@@ -24,11 +24,11 @@ if uploaded_file is not None:
         
         excel = df[s].copy()
         
-        # --- MODIFICACIÓN AQUÍ: Manejo de ', ' (Monto Inducido) ---
+        # --- DIVIDIR DESCRIPCIÓN Y DETECTAR MONTO INDUCIDO ---
         split_description = excel['Descripción'].str.split(',', expand=True)
         
-        # Si un elemento del split está vacío (ej. antes o después de una coma), asignamos 'Monto Inducido'
-        split_description = split_description.applymap(
+        # Usamos .map() compatible con Pandas 2.1+
+        split_description = split_description.map(
             lambda x: 'Monto Inducido' if (pd.notna(x) and str(x).strip() == '') else x
         )
         
