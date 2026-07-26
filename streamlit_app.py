@@ -139,12 +139,14 @@ if uploaded_file is not None:
         if 'Original Description' in excel_unmapped_products.columns:
             excel_unmapped_products.drop(columns=['Original Description'], inplace=True)
         
+        # --- CAMBIO REALIZADO AQUÍ ---
         excel_unmapped_products['Tarjeta'] = excel_unmapped_products.apply(
-            lambda row: row['Precio Unitario'] if row['Método de pago'] == 'Tarjeta' else '', axis=1
+            lambda row: row['Total Venta'] if row['Método de pago'] == 'Tarjeta' else '', axis=1
         )
         excel_unmapped_products['Efectivo'] = excel_unmapped_products.apply(
-            lambda row: row['Precio Unitario'] if row['Método de pago'] == 'Efectivo' else '', axis=1
+            lambda row: row['Total Venta'] if row['Método de pago'] == 'Efectivo' else '', axis=1
         )
+        # -----------------------------
         excel_unmapped_products['Tarjeta'] = pd.to_numeric(excel_unmapped_products['Tarjeta'], errors='coerce').fillna(0.0)
         excel_unmapped_products['Efectivo'] = pd.to_numeric(excel_unmapped_products['Efectivo'], errors='coerce').fillna(0.0)
         
