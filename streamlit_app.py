@@ -24,8 +24,14 @@ if uploaded_file is not None:
         
         excel = df[s].copy()
         
-        # Dividir descripción
+        # --- MODIFICACIÓN AQUÍ: Manejo de ', ' (Monto Inducido) ---
         split_description = excel['Descripción'].str.split(',', expand=True)
+        
+        # Si un elemento del split está vacío (ej. antes o después de una coma), asignamos 'Monto Inducido'
+        split_description = split_description.applymap(
+            lambda x: 'Monto Inducido' if (pd.notna(x) and str(x).strip() == '') else x
+        )
+        
         n = [f'Descripción_{i+1}' for i in range(split_description.shape[1])]
         split_description.columns = n
         excel = pd.concat([excel, split_description], axis=1)
@@ -60,6 +66,10 @@ if uploaded_file is not None:
             if pd.isna(desc_value) or str(desc_value).strip() == 'None' or str(desc_value).strip() == '':
                 return None, None, None
             s_val = str(desc_value).strip()
+            
+            if s_val == 'Monto Inducido':
+                return 'Monto Inducido', 1.0, None
+                
             match = re.match(r'(\d+(?:\.\d+)?)\s*\*\s*(.+)', s_val)
             if match:
                 quantity = float(match.group(1))
@@ -108,6 +118,7 @@ if uploaded_file is not None:
             mapped_items = [item for item in current_transaction_items_raw if item['Precio Unitario'] is not None]
             unmapped_items = [item for item in current_transaction_items_raw if item['Precio Unitario'] is None]
             total_mapped_sales_value = sum(item['Cantidad'] * item['Precio Unitario'] for item in mapped_items)
+            
             if len(unmapped_items) == 1:
                 unmapped_item = unmapped_items[0]
                 unmapped_quantity = unmapped_item['Cantidad']
@@ -131,7 +142,7 @@ if uploaded_file is not None:
         else:
             sales_details_df_reprocessed = pd.DataFrame(columns=['Cantidad', 'Precio Unitario', 'Total Venta', 'Producto', 'Método de pago', 'Fecha'])
         
-        # --- CORRECCIÓN EN PRODUCTOS NO MAPEADOS ---
+        # --- PRODUCTOS NO MAPEADOS ---
         excel_unmapped_products = sales_details_df_reprocessed[~sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         
         if not excel_unmapped_products.empty:
