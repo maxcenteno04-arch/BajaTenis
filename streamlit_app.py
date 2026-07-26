@@ -13,7 +13,6 @@ uploaded_file = st.file_uploader("Selecciona el archivo Excel", type=["xlsx", "x
 
 if uploaded_file is not None:
     try:
-
         df = pd.read_excel(uploaded_file, header=16)
         st.success("Archivo cargado correctamente.")
         
@@ -128,36 +127,36 @@ if uploaded_file is not None:
         
         sales_details_df_reprocessed = pd.DataFrame(reprocessed_sales_details)
         if not sales_details_df_reprocessed.empty:
-            sales_details_df_reprocessed['Total Venta'] = sales_details_df_reprocessed['Cantidad'] * sales_details_df_reprocessed['Precio Unitario']
+            sales_details_df_reprocessed['Total Venta'] = pd.to_numeric(sales_details_df_reprocessed['Cantidad'], errors='coerce') * pd.to_numeric(sales_details_df_reprocessed['Precio Unitario'], errors='coerce')
         else:
             sales_details_df_reprocessed = pd.DataFrame(columns=['Cantidad', 'Precio Unitario', 'Total Venta', 'Producto', 'Método de pago', 'Fecha'])
         
-
+        # --- CORRECCIÓN EN PRODUCTOS NO MAPEADOS ---
         excel_unmapped_products = sales_details_df_reprocessed[~sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
-        excel_unmapped_products['Cantidad'] = excel_unmapped_products['Cantidad'].apply(lambda x: '' if pd.isna(x) else x)
-        excel_unmapped_products['Total Venta'] = excel_unmapped_products['Total Venta'].apply(lambda x: '' if pd.isna(x) else '{:.2f}'.format(x))
-        if 'Original Description' in excel_unmapped_products.columns:
-            excel_unmapped_products.drop(columns=['Original Description'], inplace=True)
         
-        # --- CAMBIO REALIZADO AQUÍ ---
-        excel_unmapped_products['Tarjeta'] = excel_unmapped_products.apply(
-            lambda row: row['Total Venta'] if row['Método de pago'] == 'Tarjeta' else '', axis=1
-        )
-        excel_unmapped_products['Efectivo'] = excel_unmapped_products.apply(
-            lambda row: row['Total Venta'] if row['Método de pago'] == 'Efectivo' else '', axis=1
-        )
-        # -----------------------------
-        excel_unmapped_products['Tarjeta'] = pd.to_numeric(excel_unmapped_products['Tarjeta'], errors='coerce').fillna(0.0)
-        excel_unmapped_products['Efectivo'] = pd.to_numeric(excel_unmapped_products['Efectivo'], errors='coerce').fillna(0.0)
+        if not excel_unmapped_products.empty:
+            excel_unmapped_products['Total Venta'] = pd.to_numeric(excel_unmapped_products['Total Venta'], errors='coerce').fillna(0.0)
+            
+            excel_unmapped_products['Tarjeta'] = excel_unmapped_products.apply(
+                lambda row: row['Total Venta'] if row['Método de pago'] == 'Tarjeta' else 0.0, axis=1
+            )
+            excel_unmapped_products['Efectivo'] = excel_unmapped_products.apply(
+                lambda row: row['Total Venta'] if row['Método de pago'] == 'Efectivo' else 0.0, axis=1
+            )
+        else:
+            excel_unmapped_products = pd.DataFrame(columns=['Producto', 'Tarjeta', 'Efectivo', 'Cantidad', 'Total Venta'])
+            excel_unmapped_products['Tarjeta'] = 0.0
+            excel_unmapped_products['Efectivo'] = 0.0
+
+        total_tarjeta_unmapped = float(excel_unmapped_products['Tarjeta'].sum())
+        total_efectivo_unmapped = float(excel_unmapped_products['Efectivo'].sum())
         
-        # MODIFICACIÓN: Ya no se incluye la clave 'Total Productos'
-        total_tarjeta_unmapped = excel_unmapped_products['Tarjeta'].sum()
-        total_efectivo_unmapped = excel_unmapped_products['Efectivo'].sum()
         totals_df_unmapped = pd.DataFrame({
             'Total Tarjeta': [total_tarjeta_unmapped],
             'Total Efectivo': [total_efectivo_unmapped]
         })
         
+        # --- PRODUCTOS MAPEADOS ---
         sales_details_mapped = sales_details_df_reprocessed[sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         if not sales_details_mapped.empty:
             sales_details_mapped['Total Venta'] = sales_details_mapped['Cantidad'] * sales_details_mapped['Precio Unitario']
@@ -175,7 +174,7 @@ if uploaded_file is not None:
             
             for col in ['Tarjeta', 'Efectivo']:
                 if col not in pivoted_sales_mapped.columns:
-                    pivoted_sales_mapped[col] = 0
+                    pivoted_sales_mapped[col] = 0.0
             
             pivoted_sales_mapped = pivoted_sales_mapped.reset_index()
             
@@ -185,14 +184,7 @@ if uploaded_file is not None:
             final_sales_summary_mapped = pd.merge(pivoted_sales_mapped, total_quantity_per_product_mapped, on='Producto', how='left')
             
             final_sales_summary_mapped.rename(columns={
-                'Tarjeta': 'Total Venta (Tarjeta)',
-                'Efectivo': 'Total Venta (Efectivo)'
-            }, inplace=True)
-            
-            final_sales_summary_mapped.rename(columns={
                 'Total Cantidad Vendida': 'Cantidad',
-                'Total Venta (Tarjeta)': 'Tarjeta',
-                'Total Venta (Efectivo)': 'Efectivo'
             }, inplace=True)
             
             final_sales_summary_mapped = final_sales_summary_mapped[['Producto', 'Cantidad', 'Tarjeta', 'Efectivo']]
@@ -207,19 +199,21 @@ if uploaded_file is not None:
         else:
             final_sales_summary_mapped = pd.DataFrame(columns=['Producto', 'Cantidad', 'Tarjeta', 'Efectivo'])
         
-        total_tarjeta_mapped = pd.to_numeric(final_sales_summary_mapped['Tarjeta']).sum() if not final_sales_summary_mapped.empty else 0.0
-        total_efectivo_mapped = pd.to_numeric(final_sales_summary_mapped['Efectivo']).sum() if not final_sales_summary_mapped.empty else 0.0
+        total_tarjeta_mapped = float(final_sales_summary_mapped['Tarjeta'].sum()) if not final_sales_summary_mapped.empty else 0.0
+        total_efectivo_mapped = float(final_sales_summary_mapped['Efectivo'].sum()) if not final_sales_summary_mapped.empty else 0.0
+        
         totals_df_mapped = pd.DataFrame({
             'Total Tarjeta': [total_tarjeta_mapped],
             'Total Efectivo': [total_efectivo_mapped]
         })
         
+        # --- OTROS EVENTOS ---
         df_other_events = pd.DataFrame(other_events_details)
         if not df_other_events.empty:
             df_other_events['Precio Unitario'] = pd.to_numeric(df_other_events['Precio Unitario'], errors='coerce').fillna(0.0)
             df_other_events['Total Venta'] = df_other_events['Cantidad'] * df_other_events['Precio Unitario']
             
-            if 'Fecha' in df_other_events.columns:
+            if 'Fecha' in df_other_events.columns and pd.api.types.is_datetime64_any_dtype(df_other_events['Fecha']):
                 df_other_events['Fecha'] = df_other_events['Fecha'].dt.strftime('%Y-%m-%d')
                 
             df_other_events['Tarjeta'] = df_other_events.apply(
@@ -233,8 +227,8 @@ if uploaded_file is not None:
             final_other_events = df_other_events[['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo']].copy()
             
             total_events_other = final_other_events.shape[0]
-            total_tarjeta_other = final_other_events['Tarjeta'].sum()
-            total_efectivo_other = final_other_events['Efectivo'].sum()
+            total_tarjeta_other = float(final_other_events['Tarjeta'].sum())
+            total_efectivo_other = float(final_other_events['Efectivo'].sum())
             totals_df_other = pd.DataFrame({
                 'Total Eventos': [total_events_other],
                 'Total Tarjeta': [total_tarjeta_other],
@@ -244,8 +238,9 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
+        # RENDERIZAR EN STREAMLIT
         st.subheader("Productos no Mapeados")
-        st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']], use_container_width=True, hide_index=True)
+        st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']] if not excel_unmapped_products.empty else excel_unmapped_products, use_container_width=True, hide_index=True)
         
         st.subheader("Totales No Mapeados")
         st.dataframe(totals_df_unmapped, use_container_width=True, hide_index=True)
@@ -288,7 +283,10 @@ if uploaded_file is not None:
             st.session_state.sound_played = False
 
         if not st.session_state.sound_played:
-            st.audio("notificacion.mp3", format="audio/mp3", autoplay=True)
+            try:
+                st.audio("notificacion.mp3", format="audio/mp3", autoplay=True)
+            except Exception:
+                pass
             st.session_state.sound_played = True
         
     except Exception as e:
