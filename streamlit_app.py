@@ -24,10 +24,8 @@ if uploaded_file is not None:
         
         excel = df[s].copy()
         
-        # --- DIVIDIR DESCRIPCIÓN Y DETECTAR MONTO INDUCIDO ---
         split_description = excel['Descripción'].str.split(',', expand=True)
         
-        # Usamos .map() compatible con Pandas 2.1+
         split_description = split_description.map(
             lambda x: 'Monto Inducido' if (pd.notna(x) and str(x).strip() == '') else x
         )
@@ -41,7 +39,6 @@ if uploaded_file is not None:
         
         description_cols = [col for col in excel.columns if col.startswith('Descripción_')]
         
-        # Reemplazar 'x' por '*'
         pattern_to_replace_x = r'(\d+(?:\.\d+)?)\s*x\s*(.+)'
         replacement_with_star = r'\1 * \2'
         for col in description_cols:
@@ -142,7 +139,6 @@ if uploaded_file is not None:
         else:
             sales_details_df_reprocessed = pd.DataFrame(columns=['Cantidad', 'Precio Unitario', 'Total Venta', 'Producto', 'Método de pago', 'Fecha'])
         
-        # --- PRODUCTOS NO MAPEADOS ---
         excel_unmapped_products = sales_details_df_reprocessed[~sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         
         if not excel_unmapped_products.empty:
@@ -167,7 +163,6 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_unmapped]
         })
         
-        # --- PRODUCTOS MAPEADOS ---
         sales_details_mapped = sales_details_df_reprocessed[sales_details_df_reprocessed['Producto'].isin(products_to_summarize)].copy()
         if not sales_details_mapped.empty:
             sales_details_mapped['Total Venta'] = sales_details_mapped['Cantidad'] * sales_details_mapped['Precio Unitario']
@@ -218,7 +213,6 @@ if uploaded_file is not None:
             'Total Efectivo': [total_efectivo_mapped]
         })
         
-        # --- OTROS EVENTOS ---
         df_other_events = pd.DataFrame(other_events_details)
         if not df_other_events.empty:
             df_other_events['Precio Unitario'] = pd.to_numeric(df_other_events['Precio Unitario'], errors='coerce').fillna(0.0)
@@ -249,7 +243,6 @@ if uploaded_file is not None:
             final_other_events = pd.DataFrame(columns=['Fecha', 'Evento', 'Descripción', 'Tarjeta', 'Efectivo'])
             totals_df_other = pd.DataFrame({'Total Eventos': [0], 'Total Tarjeta': [0.0], 'Total Efectivo': [0.0]})
         
-        # RENDERIZAR EN STREAMLIT
         st.subheader("Productos no Mapeados")
         st.dataframe(excel_unmapped_products[['Producto', 'Tarjeta', 'Efectivo']] if not excel_unmapped_products.empty else excel_unmapped_products, use_container_width=True, hide_index=True)
         
