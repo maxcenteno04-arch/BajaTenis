@@ -53,9 +53,9 @@ if uploaded_file is not None:
         ]
         
         description_to_number_map = {
-            'Renta de Cancha': 650, 'Renta pala': 100, 'Gatorade 600 ml': 40,
-            'Electrolit': 45, 'Agua 1 lt': 30, 'Pelotas NOX Pro Titanium': 250,
-            'Agua Mineral': 30, 'Snickers': 30, 'Coca-Cola 355 ml': 40,
+            'Renta de Cancha': 650, 'Renta pala': 100, 'Gatorade 600 ml': 50,
+            'Electrolit': 60, 'Agua 1 lt': 40, 'Pelotas NOX Pro Titanium': 250,
+            'Agua Mineral': 40, 'Snickers': 45, 'Coca-Cola 355 ml': 50,
             'Overgrip NOX': 100, 'Happy': 60 , 'Pelotas PENN Championship':200
         }
         
